@@ -1,7 +1,5 @@
-
 generator client {
   provider = "prisma-client-js"
-
 }
 
 datasource db {
@@ -9,135 +7,119 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // User Model
 
 model User {
-  id               String     @id @default(cuid())
-  username         String?    @unique
-  email            String     @unique
-  passwordHash     String
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  
-  quests           Quest[]
-  attempts         QuestAttempt[]
-  xpEvents         XpEvent[]
-  stats            UserStats?
-  preference       UserPreference?
+  id           String   @id @default(cuid())
+  username     String?  @unique
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quests     Quest[]
+  attempts   QuestAttempt[]
+  xpEvents   XpEvent[]
+  stats      UserStats?
+  preference UserPreference?
 }
 
 // Quest Model
 
-
 model Quest {
-  id                String      @id @default(cuid())
-  title             String
-  description       String
-  category          String
-  difficulty        String
-  durationMin       Int
-  steps             String
-  verificationType  String
-  rewardXp          Int
-  userIntent        String?
-  parentQuestId     String?
-  mutationReason    String?
-  createdById       String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id               String   @id @default(cuid())
+  title            String
+  description      String
+  category         String
+  difficulty       String
+  durationMin      Int
+  steps            String
+  verificationType String
+  rewardXp         Int
+  userIntent       String?
+  parentQuestId    String?
+  mutationReason   String?
+  createdById      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
+  parent    Quest?         @relation("QuestMutations", fields: [parentQuestId], references: [id])
+  children  Quest[]        @relation("QuestMutations")
+  createdBy User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  attempts  QuestAttempt[]
+  xpEvents  XpEvent[]
 
-  parent       Quest?    @relation("QuestMutations", fields: [parentQuestId], references: [id])
-  children     Quest[]   @relation("QuestMutations")
-  createdBy    User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  attempts     QuestAttempt[]
-  xpEvents     XpEvent[]
-  
   @@index([parentQuestId])
   @@index([createdById])
 }
 
-
 // Quest Attempt Model 
 
-
 model QuestAttempt {
-  id               String        @id @default(cuid())
+  id               String    @id @default(cuid())
   userId           String
   questId          String
-  status           String        @default("started")
+  status           String    @default("started")
   verificationData String?
-  startedAt        DateTime      @default(now())
+  startedAt        DateTime  @default(now())
   completedAt      DateTime?
 
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quest     Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
-  xpEvent   XpEvent?
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest   Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  xpEvent XpEvent?
 
   @@index([userId])
   @@index([questId])
   @@index([userId, status])
 }
 
-
 // xpEvent Model  (for rewards)
 
-
 model XpEvent {
-  id          String     @id @default(cuid())
-  userId      String
-  questId     String
-  attemptId   String?    @unique
-  xp          Int
-  coins       Int
-  createdAt   DateTime   @default(now())
-  
+  id        String   @id @default(cuid())
+  userId    String
+  questId   String
+  attemptId String?  @unique
+  xp        Int
+  coins     Int
+  createdAt DateTime @default(now())
 
-
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quest     Quest           @relation(fields: [questId], references: [id], onDelete: Cascade)
-  attempt   QuestAttempt?   @relation(fields: [attemptId], references: [id])
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest   Quest         @relation(fields: [questId], references: [id], onDelete: Cascade)
+  attempt QuestAttempt? @relation(fields: [attemptId], references: [id])
 
   @@index([userId])
   @@index([questId])
   @@index([userId, createdAt])
 }
 
-
 // User Stats Model 
 
-
 model UserStats {
-  userId             String       @id
-  totalXp            Int          @default(0)
-  level              Int          @default(1)
-  coins              Int          @default(0)
-  currentStreak      Int          @default(0)
-  longestStreak      Int          @default(0)
-  lastCompletedDate  DateTime?
-  updatedAt          DateTime     @updatedAt
+  userId            String    @id
+  totalXp           Int       @default(0)
+  level             Int       @default(1)
+  coins             Int       @default(0)
+  currentStreak     Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastCompletedDate DateTime?
+  updatedAt         DateTime  @updatedAt
 
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
-
-
 
 // USer Preference model
 
-
 model UserPreference {
-  id           String   @id @default(cuid())
-  userId       String   @unique
+  id     String @id @default(cuid())
+  userId String @unique
 
-  interests    String?
-  difficulty   String?
-  goals        String?
+  interests  String?
+  difficulty String?
+  goals      String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
