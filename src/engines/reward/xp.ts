@@ -11,3 +11,7 @@ const BASE_XP: Record<Difficulty, number> = {
 export function calculateRewardXp(difficulty: Difficulty, durationMin: number): number {
     return BASE_XP[difficulty] + Math.round(durationMin * 1.5);
 }
+
+export function calculateCoins(xp: number): number {
+    return Math.round(xp / 10);
+}

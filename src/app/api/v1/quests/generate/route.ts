@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 import { generateQuest } from "@/engines/quest/generate";
 import { GenerateQuestRequestSchema } from "@/types/quest";
+import { toApiQuest } from "@/lib/quest-mapper";
 
 
 export async function POST(request: Request) {
@@ -30,6 +31,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
         source,
-        quest: { ...saved, steps: quest.steps },
+        quest: toApiQuest(saved)
     });
 }
