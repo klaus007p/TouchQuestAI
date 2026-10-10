@@ -18,6 +18,7 @@ export class OllamaProvider implements AIProvider {
             body: JSON.stringify({
                 model: this.model,
                 stream: false,
+                keep_alive: "30m",
                 format: "json",
                 options: { temperature: 0.8 },
                 messages: [
