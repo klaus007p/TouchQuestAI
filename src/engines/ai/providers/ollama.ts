@@ -13,6 +13,7 @@ export class OllamaProvider implements AIProvider {
     async complete({ system, prompt }: AICompletionInput): Promise<string> {
         const res = await fetch(`${this.baseUrl}/api/chat`, {
             method: "POST",
+            signal: AbortSignal.timeout(60_000),
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: this.model,
