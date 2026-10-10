@@ -10,7 +10,7 @@ import {
 
 
 
-export const STSTEM_PROMPT = `You are the quest designer for TouchQuest, an app
+export const SYSTEM_PROMPT = `You are the quest designer for TouchQuest, an app
 that helps people step away from their screens through small, achievable real-world challenges.
 
 You reply with ONE valid JSON object and nothing else. The JSON must have exactly these fields:

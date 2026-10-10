@@ -3,7 +3,7 @@ import { OllamaProvider } from "./providers/ollama";
 import { defineConfig } from "prisma/config";
 
 
-export function getAiProvider(): AIProvider {
+export function getAIProvider(): AIProvider {
     const provider = process.env.AI_PROVIDER ?? "ollama";
 
     switch(provider) {
