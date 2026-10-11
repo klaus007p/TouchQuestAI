@@ -4,6 +4,8 @@ import { calculateRewardXp } from "@/engines/reward/xp";
 import { GenerateQuestRequest, GeneratedQuest } from "@/types/quest";
 import { validateQuest } from "./validator";
 import { pickFallback } from "./fallbacks";
+import type { UserContext } from "@/types/preferences";
+
 
 
 const MAX_ATTEMPTS = 3;
@@ -15,12 +17,13 @@ export interface GenerationResult {
 
 
 export async function generateQuest(
-    req: GenerateQuestRequest
+    req: GenerateQuestRequest,
+    ctx?: UserContext
 ): Promise<GenerationResult> {
     const ai = getAIProvider();
-    let prompt = buildGeneratePrompt(req);
+    let prompt = buildGeneratePrompt(req, ctx);
 
-    for(let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++){
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         try {
             const raw = await ai.complete({ system: SYSTEM_PROMPT, prompt });
             const result = validateQuest(raw, { maxDurationMin: req.timeAvailableMin });
@@ -35,7 +38,7 @@ export async function generateQuest(
 
             console.warn(`[generateQuest] attempt ${attempt} invalid: ${result.error}`);
             prompt = 
-                buildGeneratePrompt(req) + 
+                buildGeneratePrompt(req, ctx) + 
                 `\n\n Your previous answer was rejected: ${result.error}. Fix this and reply with valid JSON only.`;
         } catch (e) {
             console.warn(`[generateQuest] attempt ${attempt} failed:`, (e as Error).message);
