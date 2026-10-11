@@ -1,10 +1,51 @@
+import { Howl } from "howler";
+
 const KEY = "tq_sound";
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
 
 let ctx: AudioContext | null = null;
 let enabled = true;
 let loaded = false;
 let ambientWanted = false;
-let ambient: { stop: () => void } | null = null;
+let synthAmbient: { stop: () => void } | null = null;
+
+// ---------------------------------------------------------------------------
+// Sound files
+// ---------------------------------------------------------------------------
+
+// One-shot effects. If a file is missing, the synth version plays instead.
+const FILES = {
+    click: "/sounds/click.mp3",
+    chirp: "/sounds/chirp.mp3",
+    start: "/sounds/start.mp3",
+    success: "/sounds/success.mp3",
+} as const;
+
+type EffectName = keyof typeof FILES;
+
+const howls: Partial<Record<EffectName, Howl>> = {};
+const failedFiles = new Set<EffectName>();
+
+// Looping background sounds.
+export const AMBIENT_TRACKS = {
+    birds: { label: "Birds", emoji: "🐦", src: "/sounds/birds.mp3", volume: 0.4 },
+    rain: { label: "Rain", emoji: "🌧️", src: "/sounds/rain.mp3", volume: 0.35 },
+    crickets: { label: "Crickets", emoji: "🦗", src: "/sounds/crickets.mp3", volume: 0.3 },
+    storm: { label: "Storm", emoji: "⛈️", src: "/sounds/storm.mp3", volume: 0.3 },
+} as const;
+
+export type AmbientName = keyof typeof AMBIENT_TRACKS;
+
+const ambientHowls: Partial<Record<AmbientName, Howl>> = {};
+const ambientFailed = new Set<AmbientName>();
+let currentAmbient: AmbientName | null = null;
+
+// ---------------------------------------------------------------------------
+// Setup and preference
+// ---------------------------------------------------------------------------
 
 function load() {
     if (loaded || typeof window === "undefined") return;
@@ -39,6 +80,9 @@ export function isSoundEnabled() {
     return enabled;
 }
 
+// ---------------------------------------------------------------------------
+// Synth fallbacks (used when a sound file is missing or fails to load)
+// ---------------------------------------------------------------------------
 
 function tone(
     freq: number,
@@ -70,11 +114,17 @@ function tone(
     osc.stop(t + dur + 0.05);
 }
 
+function chirp() {
+    const base = 2000 + Math.random() * 600;
+    tone(base, 0, 0.08, "sine", 0.05, base * 1.5);
+    tone(base * 1.3, 0.11, 0.08, "sine", 0.05, base * 1.1);
+    tone(base * 1.2, 0.22, 0.1, "sine", 0.05, base * 1.6);
+}
 
-
+// Synthesized wind plus random bird chirps.
 function beginAmbient() {
     const c = getCtx();
-    if (!c || ambient) return;
+    if (!c || synthAmbient) return;
 
     const buffer = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
     const data = buffer.getChannelData(0);
@@ -110,7 +160,7 @@ function beginAmbient() {
     };
     timer = setTimeout(birdLoop, 1500);
 
-    ambient = {
+    synthAmbient = {
         stop: () => {
             clearTimeout(timer);
             lfo.disconnect();
@@ -124,40 +174,137 @@ function beginAmbient() {
 }
 
 function killAmbient() {
-    ambient?.stop();
-    ambient = null;
+    synthAmbient?.stop();
+    synthAmbient = null;
 }
 
+// ---------------------------------------------------------------------------
+// One-shot effects (file first, synth fallback)
+// ---------------------------------------------------------------------------
 
+function playFile(name: EffectName, fallback: () => void, volume = 0.6) {
+    load();
+    if (!enabled) return;
 
-function chirp() {
-    const base = 2000 + Math.random() * 600;
-    tone(base, 0, 0.08, "sine", 0.05, base * 1.5);
-    tone(base * 1.3, 0.11, 0.08, "sine", 0.05, base * 1.1);
-    tone(base * 1.2, 0.22, 0.1, "sine", 0.05, base * 1.6);
+    if (failedFiles.has(name)) {
+        fallback();
+        return;
+    }
+
+    let h = howls[name];
+    if (!h) {
+        h = new Howl({
+            src: [FILES[name]],
+            volume,
+            onloaderror: () => failedFiles.add(name),
+        });
+        howls[name] = h;
+    }
+    h.play();
 }
+
+// ---------------------------------------------------------------------------
+// Looping ambient tracks (file first, synth fallback)
+// ---------------------------------------------------------------------------
+
+function fadeOut(h: Howl) {
+    h.fade(h.volume(), 0, 600);
+    setTimeout(() => {
+        if (h.volume() === 0) h.pause();
+    }, 700);
+}
+
+function stopFileAmbient() {
+    for (const h of Object.values(ambientHowls)) {
+        if (h) fadeOut(h);
+    }
+}
+
+// Returns false if this track's file can't be used, so the caller can fall back.
+function startFileAmbient(name: AmbientName): boolean {
+    if (ambientFailed.has(name)) return false;
+
+    let h = ambientHowls[name];
+    if (!h) {
+        h = new Howl({
+            src: [AMBIENT_TRACKS[name].src],
+            loop: true,
+            volume: 0,
+            onloaderror: () => {
+                ambientFailed.add(name);
+                if (ambientWanted && enabled && currentAmbient === name) {
+                    stopFileAmbient();
+                    beginAmbient();
+                }
+            },
+        });
+        ambientHowls[name] = h;
+    }
+
+    // Crossfade: fade out every other track while this one fades in.
+    for (const [other, howl] of Object.entries(ambientHowls)) {
+        if (other !== name && howl) fadeOut(howl);
+    }
+
+    if (!h.playing()) h.play();
+    h.fade(h.volume(), AMBIENT_TRACKS[name].volume, 1500);
+    return true;
+}
+
+// Starts (or restarts) whichever ambient should be playing right now.
+function resumeAmbient() {
+    if (!enabled || !ambientWanted || !currentAmbient) return;
+
+    if (startFileAmbient(currentAmbient)) {
+        killAmbient();
+    } else {
+        stopFileAmbient();
+        beginAmbient();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
 export const sfx = {
-    click: () => tone(520, 0, 0.09, "sine", 0.1, 260),
-    chirp,
-    start: () => {
-        chirp();
-        tone(392, 0.3, 0.25, "triangle", 0.08);
-        tone(523, 0.45, 0.35, "triangle", 0.08);
-    },
-    success: () => {
-        [523, 659, 784, 1047].forEach((f, i) =>
-            tone(f, i * 0.12, 0.6, "triangle", 0.1)
+    click: () =>
+        playFile("click", () => tone(520, 0, 0.09, "sine", 0.1, 260), 0.4),
+
+    chirp: () => playFile("chirp", chirp, 0.5),
+
+    start: () =>
+        playFile("start", () => {
+            chirp();
+            tone(392, 0.3, 0.25, "triangle", 0.08);
+            tone(523, 0.45, 0.35, "triangle", 0.08);
+        }),
+
+    success: () =>
+        playFile("success", () => {
+            [523, 659, 784, 1047].forEach((f, i) =>
+                tone(f, i * 0.12, 0.6, "triangle", 0.1)
+            );
+        }),
+
+    levelUp: () => {
+        [523, 659, 784, 1047, 1319].forEach((f, i) =>
+            tone(f, 0.7 + i * 0.1, 0.7, "triangle", 0.1)
         );
     },
-    startAmbient: () => {
+
+    startAmbient: (name: AmbientName) => {
         load();
         ambientWanted = true;
-        if (enabled) beginAmbient();
+        currentAmbient = name;
+        resumeAmbient();
     },
+
     stopAmbient: () => {
         ambientWanted = false;
+        currentAmbient = null;
         killAmbient();
+        stopFileAmbient();
     },
 };
 
@@ -169,6 +316,10 @@ export function setSoundEnabled(value: boolean) {
     } catch {
         // Ignore storage errors.
     }
-    if (!value) killAmbient();
-    else if (ambientWanted) beginAmbient();
+    if (!value) {
+        killAmbient();
+        stopFileAmbient();
+    } else {
+        resumeAmbient();
+    }
 }

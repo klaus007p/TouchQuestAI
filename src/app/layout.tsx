@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ProgressProvider } from "@/components/progress-provider";
 import { Header } from "@/components/header";
@@ -8,6 +8,10 @@ import { ClickEffects } from "@/components/click-effects";
 export const metadata: Metadata = {
   title: "TouchQuest",
   description: "Your AI-powered excuse to touch grass.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#070b09",
 };
 
 export default function RootLayout({

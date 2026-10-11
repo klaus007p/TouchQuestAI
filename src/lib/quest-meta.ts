@@ -1,3 +1,4 @@
+import type { AmbientName } from "@/lib/sound";
 import type { QuestCategory, Difficulty } from "@/types/quest";
 
 export const CATEGORY_META: Record<
@@ -13,6 +14,18 @@ export const CATEGORY_META: Record<
     exploration: { emoji: "🗺️", label: "Exploration", badge: "bg-teal-400/15 text-teal-300" },
     productivity: { emoji: "🧑‍💻", label: "Productivity", badge: "bg-lime-400/15 text-lime-300" },
 };
+
+export const AMBIENT_FOR_CATEGORY: Record<QuestCategory, AmbientName> = {
+  outdoors: "birds",
+  exploration: "birds",
+  physical: "birds",
+  social: "birds",
+  mindfulness: "rain",
+  creativity: "rain",
+  learning: "crickets",
+  productivity: "crickets",
+};
+
 
 export const DIFFICULTY_LEVEL: Record<Difficulty, number> = {
     easy: 1,

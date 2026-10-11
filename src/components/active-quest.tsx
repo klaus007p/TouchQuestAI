@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { sfx } from "@/lib/sound";
+import { sfx, AMBIENT_TRACKS, type AmbientName } from "@/lib/sound";
+import { AMBIENT_FOR_CATEGORY } from "@/lib/quest-meta";
 import type { ApiQuest, ApiAttempt } from "@/types/api";
 import type { Submission } from "@/verification";
 
@@ -51,16 +52,30 @@ function TimerPanel({
 
             <div className="relative mx-auto h-44 w-44">
                 <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-                    <circle cx="60" cy="60" r="54" fill="none" strokeWidth="8" className="stroke-white/10" />
                     <circle
-                        cx="60" cy="60" r="54" fill="none" strokeWidth="8" strokeLinecap="round"
+                        cx="60"
+                        cy="60"
+                        r="54"
+                        fill="none"
+                        strokeWidth="8"
+                        className="stroke-white/10"
+                    />
+                    <circle
+                        cx="60"
+                        cy="60"
+                        r="54"
+                        fill="none"
+                        strokeWidth="8"
+                        strokeLinecap="round"
                         className="stroke-emerald-400 transition-all duration-1000 ease-linear"
                         strokeDasharray={C}
                         strokeDashoffset={C * (1 - progress)}
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-bold tabular-nums">{mm}:{ss}</span>
+                    <span className="text-4xl font-bold tabular-nums">
+                        {mm}:{ss}
+                    </span>
                     <span className="text-xs text-white/50">
                         {finished ? "Time's up!" : "remaining"}
                     </span>
@@ -69,7 +84,6 @@ function TimerPanel({
         </div>
     );
 }
-
 
 function ChecklistPanel({
     steps,
@@ -111,7 +125,11 @@ function ChecklistPanel({
                             >
                                 {checked[i] ? "✓" : ""}
                             </span>
-                            <span className={checked[i] ? "text-white/50 line-through" : "text-white/90"}>
+                            <span
+                                className={
+                                    checked[i] ? "text-white/50 line-through" : "text-white/90"
+                                }
+                            >
                                 {step}
                             </span>
                         </button>
@@ -121,7 +139,6 @@ function ChecklistPanel({
         </div>
     );
 }
-
 
 function StepList({ steps }: { steps: string[] }) {
     return (
@@ -138,6 +155,40 @@ function StepList({ steps }: { steps: string[] }) {
     );
 }
 
+function AmbientPicker({
+    value,
+    onChange,
+}: {
+    value: AmbientName;
+    onChange: (name: AmbientName) => void;
+}) {
+    return (
+        <div
+            role="group"
+            aria-label="Background sound"
+            className="flex flex-wrap gap-2"
+        >
+            {(Object.keys(AMBIENT_TRACKS) as AmbientName[]).map((name) => {
+                const t = AMBIENT_TRACKS[name];
+                const selected = name === value;
+                return (
+                    <button
+                        key={name}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => onChange(name)}
+                        className={`rounded-full border px-3 py-1 text-xs transition ${selected
+                            ? "border-emerald-400 bg-emerald-400/15 text-emerald-300"
+                            : "border-white/15 text-white/60 hover:border-white/30"
+                            }`}
+                    >
+                        {t.emoji} {t.label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
 
 interface ActiveQuestProps {
     quest: ApiQuest;
@@ -160,12 +211,16 @@ export function ActiveQuest({
     const [checked, setChecked] = useState<boolean[]>(() =>
         quest.steps.map(() => false)
     );
+    const [ambient, setAmbient] = useState<AmbientName>(
+        AMBIENT_FOR_CATEGORY[quest.category]
+    );
     const [text, setText] = useState("");
 
     useEffect(() => {
-        sfx.startAmbient();
-        return () => sfx.stopAmbient();
-    }, []);
+        sfx.startAmbient(ambient);
+    }, [ambient]);
+
+    useEffect(() => () => sfx.stopAmbient(), []);
 
     const checkedCount = checked.filter(Boolean).length;
     const canFinish =
@@ -208,12 +263,19 @@ export function ActiveQuest({
 
                 <div className="mt-6">
                     {type === "checklist" && (
-                        <ChecklistPanel steps={quest.steps} checked={checked} onToggle={toggle} />
+                        <ChecklistPanel
+                            steps={quest.steps}
+                            checked={checked}
+                            onToggle={toggle}
+                        />
                     )}
 
                     {type === "timer" && (
                         <>
-                            <TimerPanel startedAt={attempt.startedAt} durationMin={quest.durationMin} />
+                            <TimerPanel
+                                startedAt={attempt.startedAt}
+                                durationMin={quest.durationMin}
+                            />
                             <div className="mt-4">
                                 <StepList steps={quest.steps} />
                             </div>
@@ -239,7 +301,8 @@ export function ActiveQuest({
                             <StepList steps={quest.steps} />
                             {type === "photo" && (
                                 <p className="text-xs text-white/40">
-                                    📷 Photo upload is coming soon. For now, just confirm you did it.
+                                    📷 Photo upload is coming soon. For now, just confirm you did
+                                    it.
                                 </p>
                             )}
                         </div>
@@ -247,8 +310,13 @@ export function ActiveQuest({
                 </div>
             </div>
 
+            <AmbientPicker value={ambient} onChange={setAmbient} />
+
             {error && (
-                <p role="alert" className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">
+                <p
+                    role="alert"
+                    className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
+                >
                     {error}
                 </p>
             )}

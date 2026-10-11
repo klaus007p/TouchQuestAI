@@ -1,3 +1,4 @@
+
 import type {
     GenerateQuestRequest,
     MutationReason,
@@ -10,6 +11,7 @@ import type {
     Progress,
     CompleteResult,
     HistoryItem,
+    UnfinishedItem,
 } from "@/types/api";
 
 export class ApiError extends Error {
@@ -34,7 +36,6 @@ function ensureGuest(): Promise<void> {
     return guestReady;
 }
 
-
 async function request<T>(
     path: string,
     init?: { method?: string; body?: unknown }
@@ -52,9 +53,9 @@ async function request<T>(
     if (!res.ok) {
         throw new ApiError(data?.error ?? "Something went wrong", res.status);
     }
+
     return data as T;
 }
-
 
 type QuestSource = "ai" | "fallback";
 
@@ -66,15 +67,21 @@ export const api = {
         }),
 
     mutateQuest: (id: string, reason: MutationReason) =>
-        request<{ source: QuestSource; quest: ApiQuest }>(`/quests/${id}/mutate`, {
-            method: "POST",
-            body: { reason },
-        }),
+        request<{ source: QuestSource; quest: ApiQuest }>(
+            `/quests/${id}/mutate`,
+            {
+                method: "POST",
+                body: { reason },
+            }
+        ),
 
     startQuest: (id: string) =>
-        request<{ attempt: ApiAttempt; resumed: boolean }>(`/quests/${id}/start`, {
-            method: "POST",
-        }),
+        request<{ attempt: ApiAttempt; resumed: boolean }>(
+            `/quests/${id}/start`,
+            {
+                method: "POST",
+            }
+        ),
 
     completeQuest: (id: string, submission?: Submission) =>
         request<CompleteResult>(`/quests/${id}/complete`, {
@@ -83,12 +90,19 @@ export const api = {
         }),
 
     getQuest: (id: string) =>
-        request<{ quest: ApiQuest; attempt: ApiAttempt | null }>(`/quests/${id}`),
+        request<{ quest: ApiQuest; attempt: ApiAttempt | null }>(
+            `/quests/${id}`
+        ),
 
     getProgress: () => request<Progress>("/progress/me"),
 
     getHistory: (limit = 20) =>
-        request<{ history: HistoryItem[] }>(`/progress/history?limit=${limit}`),
+        request<{ history: HistoryItem[] }>(
+            `/progress/history?limit=${limit}`
+        ),
+
+    getUnfinished: () =>
+        request<{ unfinished: UnfinishedItem[] }>("/progress/unfinished"),
 
     getPreferences: () =>
         request<{

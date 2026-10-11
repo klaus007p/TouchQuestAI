@@ -59,3 +59,9 @@ export interface HistoryItem {
     coins: number;
     quest: ApiQuest;
 }
+
+export interface UnfinishedItem {
+  attemptId: string;
+  startedAt: string;
+  quest: ApiQuest;
+}

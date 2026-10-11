@@ -4,6 +4,7 @@ import { IntentForm } from "@/components/intent-form";
 import { QuestCard } from "@/components/quest-card";
 import { ActiveQuest } from "@/components/active-quest";
 import { useQuestFlow } from "@/hooks/use-quest-flow";
+import { CompletionScreen } from "@/components/completion-screen";
 
 export default function Home() {
   const flow = useQuestFlow();
@@ -41,21 +42,15 @@ export default function Home() {
     );
   }
 
-  // Temporary view. Step 35 replaces this with the celebration screen.
-  return (
-    <div className="space-y-4 text-center">
-      <div className="text-5xl">🎉</div>
-      <p className="text-xl font-bold text-emerald-300">
-        +{flow.result?.xpAwarded} XP
-        {flow.result?.leveledUp && " · Level up!"}
-      </p>
-      <p className="text-white/70">{flow.result?.feedback.message}</p>
-      <button
-        onClick={flow.reset}
-        className="rounded-lg border border-white/20 px-4 py-2 text-sm"
-      >
-        New quest
-      </button>
-    </div>
-  );
+  if (flow.phase === "done" && flow.result) {
+    return (
+      <CompletionScreen
+        quest={flow.quest}
+        result={flow.result}
+        onNewQuest={flow.reset}
+      />
+    );
+  }
+
+  return null;
 }
