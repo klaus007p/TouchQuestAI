@@ -8,9 +8,8 @@ import {
     AttemptAlreadyCompletedError,
 } from "@/engines/reward/complete";
 import type { VerificationType } from "@/types/quest";
-import { error } from "console";
-import { get } from "http";
-import { use } from "react";
+import { generateFeedback } from "@/engines/ai/feedback";
+
 
 
 
@@ -71,7 +70,21 @@ export async function POST(
             rewardXp: quest.rewardXp,
             verificationData: submission,
         });
-        return NextResponse.json(result);
+        
+        const feedback = await generateFeedback({
+            questTitle: quest.title,
+            category: quest.category,
+            xpAwarded: result.xpAwarded,
+            leveledUp: result.leveledUp,
+            level: result.stats.level,
+            streak: result.stats.currentStreak,
+            reflection: submission.text,
+        });
+
+        return NextResponse.json({
+            ...result,
+            feedback
+        });
 
     } catch (e) {
         if(e instanceof AttemptAlreadyCompletedError) {

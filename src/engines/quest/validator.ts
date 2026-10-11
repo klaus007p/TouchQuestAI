@@ -7,7 +7,7 @@ export type ValidationResult =
     | { ok: false, error: string };
 
 
-function extractJson(raw: string): unknown {
+export function extractJson(raw: string): unknown {
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
     if (start === -1 || end === -1 || end <= start) {

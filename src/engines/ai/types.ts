@@ -2,6 +2,7 @@
 export interface AICompletionInput {
     system: string;
     prompt: string;
+    timeoutMs?: number;
 
 }
 

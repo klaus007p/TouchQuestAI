@@ -10,10 +10,10 @@ export class OllamaProvider implements AIProvider {
     private model = process.env.OLLAMA_MODEL ?? "llama3.2";
 
 
-    async complete({ system, prompt }: AICompletionInput): Promise<string> {
+    async complete({ system, prompt, timeoutMs }: AICompletionInput): Promise<string> {
         const res = await fetch(`${this.baseUrl}/api/chat`, {
             method: "POST",
-            signal: AbortSignal.timeout(60_000),
+            signal: AbortSignal.timeout(timeoutMs ?? 60_000),
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: this.model,
