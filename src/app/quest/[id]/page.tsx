@@ -1,16 +1,19 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+
 import { api, ApiError } from "@/lib/api-client";
 import { useProgress } from "@/components/progress-provider";
 import { ActiveQuest } from "@/components/active-quest";
 import { CompletionScreen } from "@/components/completion-screen";
+
 import type { Submission } from "@/verification";
 import type { ApiQuest, ApiAttempt, CompleteResult } from "@/types/api";
 
-export default function QuestPage() {
+function QuestContent() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
     const { refresh } = useProgress();
@@ -23,27 +26,48 @@ export default function QuestPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        let cancelled = false;
+
         api
             .getQuest(id)
             .then((res) => {
+                if (cancelled) return;
+
                 setQuest(res.quest);
                 setAttempt(res.attempt);
             })
-            .catch((e) =>
-                setError(e instanceof ApiError ? e.message : "Could not load this quest.")
-            )
-            .finally(() => setLoading(false));
+            .catch((e) => {
+                if (cancelled) return;
+
+                setError(
+                    e instanceof ApiError
+                        ? e.message
+                        : "Could not load this quest."
+                );
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [id]);
 
     async function complete(submission: Submission) {
         setBusy(true);
         setError(null);
+
         try {
             setResult(await api.completeQuest(id, submission));
             await refresh();
         } catch (e) {
             setError(
-                e instanceof ApiError ? e.message : "Something went wrong. Please try again."
+                e instanceof ApiError
+                    ? e.message
+                    : "Something went wrong. Please try again."
             );
         } finally {
             setBusy(false);
@@ -51,14 +75,24 @@ export default function QuestPage() {
     }
 
     if (loading) {
-        return <div className="shimmer h-48 rounded-2xl bg-white/5" aria-label="Loading" />;
+        return (
+            <div
+                className="shimmer h-48 rounded-2xl bg-white/5"
+                aria-label="Loading"
+            />
+        );
     }
 
     if (!quest) {
         return (
             <div className="space-y-4 text-center">
-                <p className="text-red-300">{error ?? "Quest not found."}</p>
-                <Link href="/" className="text-emerald-300 underline">Back home</Link>
+                <p className="text-red-300">
+                    {error ?? "Quest not found."}
+                </p>
+
+                <Link href="/" className="text-emerald-300 underline">
+                    Back home
+                </Link>
             </div>
         );
     }
@@ -89,9 +123,31 @@ export default function QuestPage() {
     return (
         <div className="space-y-4 text-center">
             <p className="text-white/70">
-                {attempt ? "You already completed this quest." : "This quest hasn't been started yet."}
+                {attempt
+                    ? "You already completed this quest."
+                    : "This quest hasn't been started yet."}
             </p>
-            <Link href="/" className="text-emerald-300 underline">Get a new quest</Link>
+
+            <Link href="/" className="text-emerald-300 underline">
+                Get a new quest
+            </Link>
         </div>
     );
 }
+
+export default function QuestPage() {
+    return (
+        <Suspense
+            fallback={
+                <div
+                    className="shimmer h-48 rounded-2xl bg-white/5"
+                    aria-label="Loading quest"
+                />
+            }
+        >
+            <QuestContent />
+        </Suspense>
+    );
+}
+
+
