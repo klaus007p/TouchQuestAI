@@ -6,6 +6,7 @@ import { useProgress } from "@/components/progress-provider";
 import type { GenerateQuestRequest, MutationReason } from "@/types/quest";
 import type { Submission } from "@/verification";
 import type { ApiQuest, ApiAttempt, CompleteResult } from "@/types/api";
+import { sfx } from "@/lib/sound";
 
 export type Phase = "idle" | "ready" | "active" | "done";
 
@@ -40,6 +41,7 @@ export function useQuestFlow() {
             setAttempt(null);
             setResult(null);
             setPhase("ready");
+            sfx.chirp();
         });
 
     const mutate = (reason: MutationReason) =>
@@ -48,6 +50,7 @@ export function useQuestFlow() {
             const res = await api.mutateQuest(quest.id, reason);
             setQuest(res.quest);
             setSource(res.source);
+            sfx.chirp();
         });
 
     const start = () =>
@@ -56,6 +59,7 @@ export function useQuestFlow() {
             const res = await api.startQuest(quest.id);
             setAttempt(res.attempt);
             setPhase("active");
+            sfx.start();
         });
 
     const complete = (submission: Submission) =>
@@ -64,6 +68,7 @@ export function useQuestFlow() {
             const res = await api.completeQuest(quest.id, submission);
             setResult(res);
             setPhase("done");
+            sfx.success();
             await refresh();
         });
 

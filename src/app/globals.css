@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0f0c;
+  --background: #070b09;
   --foreground: #e8efe9;
 }
 
@@ -9,4 +9,259 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Soft green glow behind the whole app */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(52, 211, 153, 0.18), transparent 70%),
+    radial-gradient(40% 40% at 90% 100%, rgba(132, 204, 22, 0.1), transparent 70%);
+}
+
+
+/* Click leaf burst */
+.leaf-burst {
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  font-size: 14px;
+  transform: translate(-50%, -50%);
+  animation: leaf-pop 0.7s ease-out forwards;
+}
+
+@keyframes leaf-pop {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(1.1);
+  }
+}
+
+/* Intro scene */
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes walk-across {
+  from {
+    left: -15%;
+  }
+
+  to {
+    left: 105%;
+  }
+}
+
+@keyframes fly-across {
+  from {
+    left: 105%;
+  }
+
+  to {
+    left: -15%;
+  }
+}
+
+@keyframes bob {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes hop {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes flutter {
+
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-8deg);
+  }
+
+  25% {
+    transform: translate(18px, -12px) rotate(8deg);
+  }
+
+  50% {
+    transform: translate(36px, 2px) rotate(-6deg);
+  }
+
+  75% {
+    transform: translate(14px, -16px) rotate(10deg);
+  }
+}
+
+@keyframes pop-up {
+
+  0%,
+  30% {
+    transform: translateY(120%);
+  }
+
+  55%,
+  85% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(120%);
+  }
+}
+
+@keyframes title-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.intro-tree {
+  transform-origin: bottom center;
+  animation: grow 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.intro-walk {
+  left: -15%;
+  animation: walk-across 2.8s linear both;
+}
+
+.intro-walk-fast {
+  left: -15%;
+  animation: walk-across 2s linear both;
+}
+
+.intro-fly {
+  left: 105%;
+  animation: fly-across 2.6s linear both;
+}
+
+.intro-bob {
+  animation: bob 0.6s ease-in-out infinite;
+}
+
+.intro-hop {
+  animation: hop 0.35s ease-in-out infinite;
+}
+
+.intro-flutter {
+  animation: flutter 2s ease-in-out infinite;
+}
+
+.intro-pop {
+  animation: pop-up 2.4s ease-in-out 0.5s both;
+}
+
+.intro-title {
+  animation: title-in 0.7s ease-out 0.9s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .leaf-burst,
+  .intro-tree,
+  .intro-walk,
+  .intro-walk-fast,
+  .intro-fly,
+  .intro-bob,
+  .intro-hop,
+  .intro-flutter,
+  .intro-pop,
+  .intro-title {
+    animation: none;
+  }
+}
+
+
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.5s ease-out both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-rise,
+  .animate-float,
+  .shimmer {
+    animation: none;
+  }
 }
