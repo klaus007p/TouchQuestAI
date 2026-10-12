@@ -1,0 +1,34 @@
+name: Welcome
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const item = context.payload.pull_request ?? context.payload.issue;
+            const firstTimers = ["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER"];
+            if (!firstTimers.includes(item.author_association)) return;
+
+            const isPR = !!context.payload.pull_request;
+            const body = isPR
+              ? "Thanks for your first pull request to TouchQuest! 🌱 Please make sure `npm run lint` and `npx tsc --noEmit` pass. I'll review it within a day or two."
+              : "Thanks for opening your first issue on TouchQuest! 🌱 I'll take a look within a day or two.";
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: item.number,
+              body,
+            });
