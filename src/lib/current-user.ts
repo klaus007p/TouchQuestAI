@@ -14,7 +14,7 @@ export async function getCurrentUser() {
     }
 
     const user = await prisma.user.create({
-        data: { username: "guest", stats: { create: {} } },
+        data: { username: null, stats: { create: {} } },
     });
 
     jar.set(GUEST_COOKIE, user.id, {

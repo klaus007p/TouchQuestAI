@@ -7,7 +7,7 @@ export async function GET() {
     const user = await getCurrentUser();
     return NextResponse.json({
         id: user.id,
-        username: user.username,
+        username: user.username ?? "guest",
         isGuest: !user.email,
     });
 }

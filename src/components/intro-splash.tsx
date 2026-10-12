@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -39,36 +38,38 @@ function shouldShowIntro(): boolean {
 }
 
 export function IntroSplash() {
-    const [phase, setPhase] = useState<Phase>(() =>
-        shouldShowIntro() ? "show" : "gone"
-    );
+    // Start "gone" so the server HTML and the first client render match.
+    const [phase, setPhase] = useState<Phase>("gone");
 
+    // Decide after mount (client only).
     useEffect(() => {
-        if (phase === "gone") return;
+        if (!shouldShowIntro()) return;
+        const t = window.setTimeout(() => setPhase("show"), 0);
+        return () => window.clearTimeout(t);
+    }, []);
 
-        const t1 = window.setTimeout(() => {
-            setPhase("leaving");
-        }, 2600);
+    // Auto-start leaving after the intro plays.
+    useEffect(() => {
+        if (phase !== "show") return;
 
-        const t2 = window.setTimeout(() => {
-            markSeen();
-            setPhase("gone");
-        }, 3200);
+        const t = window.setTimeout(() => setPhase("leaving"), 2600);
+        return () => window.clearTimeout(t);
+    }, [phase]);
 
-        return () => {
-            window.clearTimeout(t1);
-            window.clearTimeout(t2);
-        };
+    // Remove the splash after the fade-out finishes.
+    useEffect(() => {
+        if (phase !== "leaving") return;
+
+        markSeen();
+        const t = window.setTimeout(() => setPhase("gone"), 600);
+        return () => window.clearTimeout(t);
     }, [phase]);
 
     if (phase === "gone") return null;
 
     return (
         <div
-            onClick={() => {
-                markSeen();
-                setPhase("leaving");
-            }}
+            onClick={() => setPhase("leaving")}
             aria-hidden="true"
             className={`fixed inset-0 z-[200] overflow-hidden bg-gradient-to-b from-sky-900 via-emerald-950 to-[#070b09] transition-opacity duration-500 ${phase === "leaving"
                     ? "pointer-events-none opacity-0"
