@@ -1,19 +1,17 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { isSoundEnabled, setSoundEnabled, sfx } from "@/lib/sound";
 
 export function SoundToggle() {
-    const [on, setOn] = useState(true);
-
-    useEffect(() => {
-        setOn(isSoundEnabled());
-    }, []);
+    const [on, setOn] = useState(() => isSoundEnabled());
 
     function toggle() {
         const next = !on;
         setOn(next);
         setSoundEnabled(next);
+
         if (next) sfx.chirp();
     }
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -22,15 +23,34 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
     const refresh = useCallback(async () => {
         try {
-            setProgress(await api.getProgress());
+            const result = await api.getProgress();
+            setProgress(result);
         } catch {
             // The header is non-critical, so a failure here should not break the app.
         }
     }, []);
 
     useEffect(() => {
-        refresh();
-    }, [refresh]);
+        let active = true;
+
+        const loadProgress = async () => {
+            try {
+                const result = await api.getProgress();
+
+                if (active) {
+                    setProgress(result);
+                }
+            } catch {
+                // The header is non-critical, so a failure here should not break the app.
+            }
+        };
+
+        void loadProgress();
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     return (
         <ProgressContext.Provider value={{ progress, refresh }}>
@@ -41,6 +61,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
 export function useProgress() {
     const ctx = useContext(ProgressContext);
-    if (!ctx) throw new Error("useProgress must be used inside ProgressProvider");
+
+    if (!ctx) {
+        throw new Error("useProgress must be used inside ProgressProvider");
+    }
+
     return ctx;
 }

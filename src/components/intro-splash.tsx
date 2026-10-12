@@ -24,41 +24,42 @@ function markSeen() {
     }
 }
 
+function shouldShowIntro(): boolean {
+    if (typeof window === "undefined") return false;
+
+    try {
+        if (sessionStorage.getItem(KEY) === "1") return false;
+    } catch {
+        // Storage blocked. Continue with the normal intro.
+    }
+
+    return !window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+}
+
 export function IntroSplash() {
-    const [phase, setPhase] = useState<Phase>("show");
+    const [phase, setPhase] = useState<Phase>(() =>
+        shouldShowIntro() ? "show" : "gone"
+    );
 
     useEffect(() => {
-        const reduce = window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        ).matches;
+        if (phase === "gone") return;
 
-        let seen = false;
-
-        try {
-            seen = sessionStorage.getItem(KEY) === "1";
-        } catch {
-            // Storage blocked. Just show the intro.
-        }
-
-        if (seen || reduce) {
-            setPhase("gone");
-            return;
-        }
-
-        const t1 = setTimeout(() => {
+        const t1 = window.setTimeout(() => {
             setPhase("leaving");
         }, 2600);
 
-        const t2 = setTimeout(() => {
+        const t2 = window.setTimeout(() => {
             markSeen();
             setPhase("gone");
         }, 3200);
 
         return () => {
-            clearTimeout(t1);
-            clearTimeout(t2);
+            window.clearTimeout(t1);
+            window.clearTimeout(t2);
         };
-    }, []);
+    }, [phase]);
 
     if (phase === "gone") return null;
 

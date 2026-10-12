@@ -1,6 +1,6 @@
 import type { AIProvider } from "./types";
 import { OllamaProvider } from "./providers/ollama";
-import { defineConfig } from "prisma/config";
+
 
 
 export function getAIProvider(): AIProvider {

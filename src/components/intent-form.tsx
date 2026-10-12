@@ -30,7 +30,6 @@ const ENERGY_OPTIONS: { label: string; value: Energy | undefined }[] = [
     { label: "High", value: "high" },
 ];
 
-
 interface IntentFormProps {
     onSubmit: (req: GenerateQuestRequest) => void;
     busy: boolean;
@@ -47,6 +46,7 @@ export function IntentForm({ onSubmit, busy, error }: IntentFormProps) {
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!canSubmit) return;
+
         onSubmit({
             intent: intent.trim(),
             timeAvailableMin: time,
@@ -57,15 +57,23 @@ export function IntentForm({ onSubmit, busy, error }: IntentFormProps) {
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-                <div className="animate-float mb-3 text-5xl" aria-hidden="true">🌱</div>
+                <div
+                    className="animate-float mb-3 text-5xl"
+                    aria-hidden="true"
+                >
+                    🌱
+                </div>
+
                 <h1 className="text-4xl font-extrabold leading-tight tracking-tight">
                     Ready to{" "}
                     <span className="bg-gradient-to-r from-emerald-300 to-lime-300 bg-clip-text text-transparent">
                         touch grass?
                     </span>
                 </h1>
+
                 <p className="mt-3 text-white/60">
-                    Tell us how you feel and we'll turn it into a small real-world quest.
+                    Tell us how you feel and we&apos;ll turn it into a small
+                    real-world quest.
                 </p>
             </div>
 
@@ -79,6 +87,7 @@ export function IntentForm({ onSubmit, busy, error }: IntentFormProps) {
                     placeholder="e.g. I've been doom-scrolling all day..."
                     className="w-full resize-none rounded-xl border border-white/15 bg-white/5 p-4 outline-none placeholder:text-white/30 focus:border-emerald-400 disabled:opacity-50"
                 />
+
                 <div className="mt-2 flex flex-wrap gap-2">
                     {QUICK_PICKS.map((pick) => (
                         <button
@@ -111,7 +120,10 @@ export function IntentForm({ onSubmit, busy, error }: IntentFormProps) {
             />
 
             {error && (
-                <p role="alert" className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">
+                <p
+                    role="alert"
+                    className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
+                >
                     {error}
                 </p>
             )}

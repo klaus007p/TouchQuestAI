@@ -3,7 +3,7 @@ import type { UserPreference } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 import { UpdatePreferencesSchema } from "@/types/preferences";
-import { error } from "console";
+
 
 
 

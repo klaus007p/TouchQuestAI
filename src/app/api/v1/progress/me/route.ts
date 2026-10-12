@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 import { xpForLevel } from "@/engines/reward/level";
 import { activeStreak } from "@/engines/reward/streak";
-import { exportPages } from "next/dist/export/worker";
+
 
 
 export async function GET() {
